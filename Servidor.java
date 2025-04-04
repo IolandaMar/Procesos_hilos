@@ -1,57 +1,27 @@
-import java.io.*;
-import java.net.*;
+private void manejarComunicacion(Socket socket) throws IOException {
+    try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+         PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+         BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in))) {
 
-public class Servidor {
-    private static final int PORT = 4999;
-    private static final String EXIT_KEYWORD = "Kilometro";
+        String clientMessage, serverMessage;
+        boolean continuar = true;
 
-    public static void main(String[] args) {
-        new Servidor().iniciarServidor();
-    }
-
-    public void iniciarServidor() {
-        System.out.println("PORT_SERVIDOR: " + PORT);
-        System.out.println("PARAULA_CLAU_SERVIDOR: \"" + EXIT_KEYWORD + "\"\n");
-
-        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            System.out.println("> Server chat at port " + PORT);
-            System.out.println("> Initializing server... OK");
-            System.out.println("> Connection from client... OK\n");
-            System.out.println("> Initializing chat... OK\n");
-
-            try (Socket socket = serverSocket.accept()) {
-                manejarComunicacion(socket);
-            }
-        } catch (IOException e) {
-            System.err.println("Error en el servidor: " + e.getMessage());
-        }
-
-        System.out.println("> Closing server... OK");
-        System.out.println("> Bye!");
-    }
-
-    private void manejarComunicacion(Socket socket) throws IOException {
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-             BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in))) {
-
-            String clientMessage, serverMessage;
-
-            while (true) {
-                clientMessage = in.readLine();
-                if (clientMessage == null) break;
-
+        while (continuar) {
+            clientMessage = in.readLine();
+            if (clientMessage == null) {
+                continuar = false;
+            } else {
                 System.out.println("#Rebut del client: " + clientMessage);
 
                 if (clientMessage.equalsIgnoreCase(EXIT_KEYWORD)) {
                     System.out.println("\n> Client keyword detected!\n");
                     System.out.println("> Closing chat... OK\n");
-                    break;
+                    continuar = false;
+                } else {
+                    System.out.print("#Enviar al client: ");
+                    serverMessage = userInput.readLine();
+                    out.println(serverMessage);
                 }
-
-                System.out.print("#Enviar al client: ");
-                serverMessage = userInput.readLine();
-                out.println(serverMessage);
             }
         }
     }
